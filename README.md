@@ -7,6 +7,5 @@ it can move a vehicle move to goal.
 
 
 
-
-
- 
+1. ros2 run midterm_env midterm_env    (execute the env ros python file)
+2. ros2 run auto_drive auto_drive      (execute my subscriber ros python file)
