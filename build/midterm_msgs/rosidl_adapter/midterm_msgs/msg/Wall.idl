@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from midterm_msgs/msg/Wall.msg
+// generated code does not contain a copyright notice
+
+
+module midterm_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      " Wall Messages" "\n"
+      " top-left, top-right, bottom-left, bottom-right")
+    struct Wall {
+      float bl_x;
+
+      float bl_y;
+
+      float size_x;
+
+      float size_y;
+    };
+  };
+};

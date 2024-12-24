@@ -1,0 +1,9 @@
+source;share/auto_drive/hook/pythonpath.ps1
+source;share/auto_drive/hook/pythonpath.dsv
+source;share/auto_drive/hook/pythonpath.sh
+source;share/auto_drive/hook/ament_prefix_path.ps1
+source;share/auto_drive/hook/ament_prefix_path.dsv
+source;share/auto_drive/hook/ament_prefix_path.sh
+source;../../build/auto_drive/share/auto_drive/hook/pythonpath_develop.ps1
+source;../../build/auto_drive/share/auto_drive/hook/pythonpath_develop.dsv
+source;../../build/auto_drive/share/auto_drive/hook/pythonpath_develop.sh

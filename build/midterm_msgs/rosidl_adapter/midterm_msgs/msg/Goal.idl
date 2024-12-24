@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from midterm_msgs/msg/Goal.msg
+// generated code does not contain a copyright notice
+
+
+module midterm_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      " Goal Messages" "\n"
+      " (x, y) position of goal")
+    struct Goal {
+      float x;
+
+      float y;
+    };
+  };
+};

@@ -1,0 +1,11 @@
+{
+  "package_name": "midterm_msgs",
+  "non_idl_tuples": [
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/Wall.msg",
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/Goal.msg",
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/SimpleGPS.msg",
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/SimpleLidar.msg",
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/WallList.msg",
+    "/home/gyumin/mobility_ws/src/midterm_msgs:msg/Control.msg"
+  ]
+}

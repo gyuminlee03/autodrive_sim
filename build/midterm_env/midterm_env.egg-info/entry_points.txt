@@ -1,0 +1,3 @@
+[console_scripts]
+env = midterm_env.env:main
+

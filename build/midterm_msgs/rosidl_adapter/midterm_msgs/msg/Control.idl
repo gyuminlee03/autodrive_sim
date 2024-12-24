@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from midterm_msgs/msg/Control.msg
+// generated code does not contain a copyright notice
+
+
+module midterm_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      " Control Messages" "\n"
+      " accel and steering angle")
+    struct Control {
+      float accel;
+
+      float steering;
+    };
+  };
+};

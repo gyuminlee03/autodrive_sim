@@ -1,0 +1,15 @@
+running develop
+running egg_info
+writing auto_drive.egg-info/PKG-INFO
+writing dependency_links to auto_drive.egg-info/dependency_links.txt
+writing entry points to auto_drive.egg-info/entry_points.txt
+writing requirements to auto_drive.egg-info/requires.txt
+writing top-level names to auto_drive.egg-info/top_level.txt
+reading manifest file 'auto_drive.egg-info/SOURCES.txt'
+writing manifest file 'auto_drive.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/gyumin/mobility_ws/install/auto_drive/lib/python3.8/site-packages/auto-drive.egg-link (link to .)
+Installing auto_drive script to /home/gyumin/mobility_ws/install/auto_drive/lib/auto_drive
+
+Installed /home/gyumin/mobility_ws/build/auto_drive
+running symlink_data

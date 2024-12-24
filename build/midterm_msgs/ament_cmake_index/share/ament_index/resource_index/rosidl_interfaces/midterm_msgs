@@ -1,0 +1,12 @@
+msg/Control.idl
+msg/Control.msg
+msg/Goal.idl
+msg/Goal.msg
+msg/SimpleGPS.idl
+msg/SimpleGPS.msg
+msg/SimpleLidar.idl
+msg/SimpleLidar.msg
+msg/Wall.idl
+msg/Wall.msg
+msg/WallList.idl
+msg/WallList.msg

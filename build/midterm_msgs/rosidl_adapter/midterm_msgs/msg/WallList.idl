@@ -1,0 +1,16 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from midterm_msgs/msg/WallList.msg
+// generated code does not contain a copyright notice
+
+#include "midterm_msgs/msg/Wall.idl"
+
+module midterm_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      " WallList Messages" "\n"
+      " list of walls in the map")
+    struct WallList {
+      sequence<midterm_msgs::msg::Wall> walls;
+    };
+  };
+};

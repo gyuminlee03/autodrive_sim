@@ -1,0 +1,19 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from midterm_msgs/msg/SimpleGPS.msg
+// generated code does not contain a copyright notice
+
+
+module midterm_msgs {
+  module msg {
+    @verbatim (language="comment", text=
+      " SimpleGPS Messages" "\n"
+      " (x, y, yaw) position of vehicle")
+    struct SimpleGPS {
+      float x;
+
+      float y;
+
+      float yaw;
+    };
+  };
+};

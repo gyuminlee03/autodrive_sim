@@ -1,0 +1,226 @@
+import rclpy
+from rclpy.node import Node
+from rclpy.qos import QoSProfile
+from midterm_msgs.msg import SimpleGPS, SimpleLidar, WallList, Goal, Control
+
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+from heapq import heappop, heappush
+
+
+# A* Algorithm for Path Planning with Safety Margin
+def a_star_with_margin(start, goal, walls, grid_size=1.0, margin=1.0):
+    """
+    A* implementation that avoids walls with a safety margin.
+    start: tuple(x, y)
+    goal: tuple(x, y)
+    walls: list of wall rectangles [(x, y, width, height), ...]
+    grid_size: resolution of the grid
+    margin: safety margin to keep away from walls
+    """
+    def heuristic(a, b):
+        return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+    # Translate walls into occupied grid cells with a margin
+    wall_set = set()
+    for wall in walls:
+        x_start = int((wall[0] - margin) / grid_size)
+        y_start = int((wall[1] - margin) / grid_size)
+        x_end = int((wall[0] + wall[2] + margin) / grid_size)
+        y_end = int((wall[1] + wall[3] + margin) / grid_size)
+        for x in range(x_start, x_end + 1):
+            for y in range(y_start, y_end + 1):
+                wall_set.add((x, y))
+
+    # Convert start and goal to grid coordinates
+    start_grid = (int(start[0] / grid_size), int(start[1] / grid_size))
+    goal_grid = (int(goal[0] / grid_size), int(goal[1] / grid_size))
+
+    # A* Initialization
+    open_set = []
+    heappush(open_set, (0 + heuristic(start_grid, goal_grid), 0, start_grid, None))
+    came_from = {}
+    cost_so_far = {start_grid: 0}
+
+    # Directions for moving in a grid
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+    while open_set:
+        _, cost, current, parent = heappop(open_set)
+
+        if current in came_from:
+            continue
+        came_from[current] = parent
+
+        if current == goal_grid:
+            # Reconstruct path
+            path = []
+            while current:
+                path.append((current[0] * grid_size, current[1] * grid_size))
+                current = came_from[current]
+            return path[::-1]
+
+        for dx, dy in directions:
+            neighbor = (current[0] + dx, current[1] + dy)
+            if neighbor in wall_set or neighbor in cost_so_far:
+                continue
+            new_cost = cost + heuristic(current, neighbor)
+            cost_so_far[neighbor] = new_cost
+            priority = new_cost + heuristic(neighbor, goal_grid)
+            heappush(open_set, (priority, new_cost, neighbor, current))
+
+    return []  # No path found
+
+
+# Pure Pursuit Controller
+class PurePursuitController:
+    def __init__(self, lookahead_distance):
+        self.lookahead_distance = lookahead_distance
+
+    def find_target_point(self, path, current_pos):
+        for i, point in enumerate(path):
+            dist = math.hypot(point[0] - current_pos[0], point[1] - current_pos[1])
+            if dist >= self.lookahead_distance:
+                return point
+        return path[-1]
+
+    def control(self, current_pos, current_yaw, target_point):
+        alpha = math.atan2(target_point[1] - current_pos[1], target_point[0] - current_pos[0]) - current_yaw
+        return 2 * math.sin(alpha) / self.lookahead_distance
+
+
+# Visualization
+class Visualization:
+    def __init__(self):
+        self.fig, self.ax = plt.subplots()
+        plt.ion()
+        plt.show()
+
+    def update(self, walls, obstacles, path, car_position, goal, lidar_data):
+        self.ax.clear()
+        self.ax.set_xlim(-10, 100)
+        self.ax.set_ylim(-10, 100)
+
+        # Plot walls
+        for wall in walls:
+            rect = plt.Rectangle((wall[0], wall[1]), wall[2], wall[3], color='gray')
+            self.ax.add_patch(rect)
+
+        # Plot obstacles
+        for obs in obstacles:
+            self.ax.plot(obs[0], obs[1], 'ro')
+
+        # Plot path
+        if path:
+            x, y = zip(*path)
+            self.ax.plot(x, y, '-g')
+
+        # Plot car position
+        self.ax.plot(car_position[0], car_position[1], 'bo')
+
+        # Plot goal
+        if goal:
+            self.ax.plot(goal[0], goal[1], 'rx')
+
+        # Plot LiDAR points
+        for beam in lidar_data:
+            self.ax.plot([car_position[0], beam[0]], [car_position[1], beam[1]], 'b', alpha=0.5)
+
+        plt.pause(0.1)
+
+
+# Autonomous Driving Node
+class AutonomousDrivingNode(Node):
+    def __init__(self):
+        super().__init__('autonomous_driving_node')
+        qos_profile = QoSProfile(depth=10)
+
+        # Publishers and Subscribers
+        self.control_publisher = self.create_publisher(Control, '/control', qos_profile)
+        self.gps_subscriber = self.create_subscription(SimpleGPS, '/gps_1', self.gps_callback, qos_profile)
+        self.lidar_subscriber = self.create_subscription(SimpleLidar, '/lidar', self.lidar_callback, qos_profile)
+        self.wall_subscriber = self.create_subscription(WallList, '/walls', self.wall_callback, qos_profile)
+        self.goal_subscriber = self.create_subscription(Goal, '/goal', self.goal_callback, qos_profile)
+
+        # Parameters
+        self.current_pos = [0.0, 0.0]
+        self.current_yaw = 0.0
+        self.goal = None
+        self.walls = []
+        self.dynamic_obstacles = []
+        self.path = []
+
+        # Control and Visualization
+        self.pure_pursuit = PurePursuitController(lookahead_distance=3.0)
+        self.visualization = Visualization()
+        self.timer = self.create_timer(0.1, self.control_loop)
+
+    # Callback Functions
+    def gps_callback(self, msg):
+        self.current_pos = [msg.x, msg.y]
+        self.current_yaw = msg.yaw
+
+    def lidar_callback(self, msg):
+        self.dynamic_obstacles = []
+        for i, distance in enumerate(msg.beams):
+            if distance < 20.0:  # LiDAR range threshold
+                angle = math.radians(i * 10)
+                x = self.current_pos[0] + distance * math.cos(self.current_yaw + angle)
+                y = self.current_pos[1] + distance * math.sin(self.current_yaw + angle)
+                self.dynamic_obstacles.append((x, y))
+
+    def wall_callback(self, msg):
+        self.walls = [[wall.bl_x, wall.bl_y, wall.size_x, wall.size_y] for wall in msg.walls]
+
+    def goal_callback(self, msg):
+        self.goal = [msg.x, msg.y]
+
+    # Control Loop
+    def control_loop(self):
+        if not self.goal or not self.walls:
+            return
+
+        # Combine walls and dynamic obstacles for planning
+        planning_walls = self.walls
+        for obs in self.dynamic_obstacles:
+            planning_walls.append([obs[0], obs[1], 1.0, 1.0])  # Treat obstacles as 1x1 walls
+
+        # Dynamic Planning
+        self.path = a_star_with_margin(self.current_pos, self.goal, planning_walls, margin=2.0)
+
+        # Visualization
+        self.visualization.update(self.walls, self.dynamic_obstacles, self.path, self.current_pos, self.goal, self.dynamic_obstacles)
+
+        # Control
+        if self.path:
+            self.execute_control()
+
+    def execute_control(self):
+        # Pure Pursuit to follow the path
+        if not self.path:
+            return
+
+        target_point = self.pure_pursuit.find_target_point(self.path, self.current_pos)
+        steering_angle = self.pure_pursuit.control(self.current_pos, self.current_yaw, target_point)
+
+        control_msg = Control()
+        control_msg.accel = 1.0  # Constant acceleration for simplicity
+        control_msg.steering = steering_angle
+        self.control_publisher.publish(control_msg)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = AutonomousDrivingNode()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
